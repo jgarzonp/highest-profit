@@ -9,6 +9,8 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * Business Object definition to wrap the file information and then to be written to JSON file according this structure.
+ *
  * @author <a href="mailto:jgarzon@gptech.com.co">Jonathan Garz&oacute;n</a>
  * @version 1.0.0
  * @since highest-profit-1.0.0

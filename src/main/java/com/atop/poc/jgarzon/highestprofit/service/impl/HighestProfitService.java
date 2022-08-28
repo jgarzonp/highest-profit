@@ -1,6 +1,7 @@
 package com.atop.poc.jgarzon.highestprofit.service.impl;
 
 import com.atop.poc.jgarzon.highestprofit.model.bo.ProfitBO;
+import com.atop.poc.jgarzon.highestprofit.model.bo.ResultBO;
 import com.atop.poc.jgarzon.highestprofit.service.IHighestProfitService;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,8 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 
 /**
+ * Service class implementation to contain all required logic to resolve requested challenge.
+ *
  * @author <a href="mailto:jgarzon@gptech.com.co">Jonathan Garz&oacute;n</a>
  * @version 1.0.0
  * @since highest-profit-1.0.0
@@ -31,7 +34,8 @@ public class HighestProfitService implements IHighestProfitService {
     private static final String COMMA_DELIMITER = ",";
 
     @Override
-    public void processDataFile(String filePath) {
+    public ResultBO processDataFile(String filePath) {
+        ResultBO result = ResultBO.builder().build();
         log.info("Start processing file: {}", filePath);
         int totalRecords = 0;
         int invalidRecords = 0;
@@ -54,18 +58,26 @@ public class HighestProfitService implements IHighestProfitService {
             }
             totalRecords--;
             List<ProfitBO> sorted = profitRecords.stream().sorted().collect(Collectors.toList());
-            log.info("Processing result: \n"
-                            + "\tTotal records: {},\n"
-                            + "\tInvalid records: {}\n"
-                            + "\tTop 20 highest profit: {}", totalRecords, invalidRecords,
-                    sorted.stream().limit(20).collect(Collectors.toList()));
+            result = ResultBO.builder()
+                    .valid(Boolean.TRUE)
+                    .totalRecords(totalRecords)
+                    .invalidRecords(invalidRecords)
+                    .top20(sorted.stream().limit(20).collect(Collectors.toList()))
+                    .build();
             writeToJSON(sorted, dataFile.getParent());
         } catch (FileNotFoundException e) {
             log.error("Error reading file: {}", e.getMessage());
         }
         log.info("Processing file finished!");
+        return result;
     }
 
+    /**
+     * Maps read line from file to {@link ProfitBO} object.
+     *
+     * @param line Read line from file.
+     * @return A new {@link ProfitBO} instance if record has valid values. <code>null</code> if record has invalid values.
+     */
     private ProfitBO mapFileLineToBO(String line) {
         try {
             ProfitBO profitRecord = null;
@@ -85,6 +97,12 @@ public class HighestProfitService implements IHighestProfitService {
         }
     }
 
+    /**
+     * Writes valid records from CSV file to JSON file.
+     *
+     * @param profitRecords filtered and sorted records to be written to JSON file.
+     * @param destination   destination directory of new JSON file named data2.json.
+     */
     private void writeToJSON(List<ProfitBO> profitRecords, String destination) {
         try {
             ObjectMapper mapper = new ObjectMapper();
